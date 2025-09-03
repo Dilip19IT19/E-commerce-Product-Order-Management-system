@@ -1,0 +1,16 @@
+package com.DipYukti.Ecommerce.dto;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+@Data
+public class CartItemRequestDto
+{
+    @NotNull(message = "product id  must be provided")
+    private Long productId;
+    @NotNull(message = "customer id must be provided")
+    private Long customerId;
+    @Min(value = 1, message = "quantity should be at least 1")
+    private Integer quantity;
+}

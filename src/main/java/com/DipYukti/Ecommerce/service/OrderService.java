@@ -1,0 +1,115 @@
+package com.DipYukti.Ecommerce.service;
+
+import com.DipYukti.Ecommerce.entity.*;
+import com.DipYukti.Ecommerce.repository.CartItemRepository;
+import com.DipYukti.Ecommerce.repository.CustomerRepository;
+import com.DipYukti.Ecommerce.repository.OrderRepository;
+import com.DipYukti.Ecommerce.repository.ProductRepository;
+import com.DipYukti.Ecommerce.type.StatusType;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class OrderService
+{
+    private final OrderRepository orderRepository;
+    private final CustomerRepository customerRepository;
+    private final ProductRepository productRepository;
+    private final CartItemRepository cartItemRepository;
+
+    @Transactional
+    public Order placeOrder(Long customerId)
+    {
+        Customer customer=customerRepository.findById(customerId).orElseThrow(()->new EntityNotFoundException("Customer not found with id: "+customerId));
+        List<CartItem> cartItems=cartItemRepository.findByCustomer(customer);
+        if(cartItems.isEmpty())
+        {
+            throw  new IllegalArgumentException("No items found in cart");
+                                    }
+        List<OrderItem>orderItems= cartItems.stream().map(item->{
+            Product product=item.getProduct();
+            if(product.getStockQuantity()<item.getQuantity())
+            {
+                throw  new IllegalArgumentException("Not have enough stock");
+            }
+            product.setStockQuantity(product.getStockQuantity()-item.getQuantity());
+            productRepository.save(product); // update product after stock quantity changes
+            return OrderItem.builder()
+                    .product(product)
+                    .quantity(item.getQuantity())
+                    .price(product.getPrice())
+                    .build();
+        }
+        ).toList();
+        BigDecimal totalAmount=orderItems.stream()
+                .map(orderItem -> orderItem.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity())))
+                .reduce(BigDecimal.ZERO,BigDecimal::add);
+        Order order=Order.builder()
+                .totalAmount(totalAmount)
+                .customer(customer)
+                .items(orderItems)
+                .orderDate(LocalDateTime.now())
+                .orderStatus(StatusType.PLACED)
+                .build();
+        orderItems.forEach(orderItem -> orderItem.setOrder(order));
+        cartItemRepository.deleteByCustomer(customer);
+        return orderRepository.save(order);
+    }
+
+    @Transactional(readOnly = true)
+    public Order getOrderById(Long orderId)
+    {
+        return orderRepository.findById(orderId).orElseThrow(()->new EntityNotFoundException("Order not found with id: "+orderId));
+
+    }
+
+    public List<Order> getOrdersByCustomer(Long customerId)
+    {
+        Customer customer=customerRepository.findById(customerId).orElseThrow(()->new EntityNotFoundException("Customer not found with id: "+customerId));
+
+        return orderRepository.findByCustomer(customer);
+    }
+
+    @Transactional
+    public Order updateOrderStatus(Long orderId, String status)
+    {
+        Order order= orderRepository.findById(orderId).orElseThrow(()->new EntityNotFoundException("Order not found with id: "+orderId));
+        StatusType newStatusType;
+        try
+        {
+            newStatusType= StatusType.valueOf(status.toUpperCase());
+        }
+        catch (IllegalArgumentException ex)
+        {
+            throw  new IllegalArgumentException("Not a valid status type "+status);
+        }
+        order.setOrderStatus(newStatusType);
+        return order;
+    }
+
+    @Transactional
+    public Order cancelOrder(Long orderId)
+    {
+        Order order= orderRepository.findById(orderId).orElseThrow(()->new EntityNotFoundException("Order not found with id: "+orderId));
+        StatusType orderStatus=order.getOrderStatus();
+        if(orderStatus==StatusType.SHIPPED || orderStatus==StatusType.DELIVERED)
+        {
+            throw new  IllegalArgumentException("Order can't be cancelled since it is already "+orderStatus.name());
+        }
+        order.getItems().forEach(orderItem -> {
+            Product product=orderItem.getProduct();
+            product.setStockQuantity(product.getStockQuantity()+orderItem.getQuantity());
+            productRepository.save(product);
+        });
+        order.setOrderStatus(StatusType.CANCELLED);
+        return orderRepository.save(order);
+    }
+}
