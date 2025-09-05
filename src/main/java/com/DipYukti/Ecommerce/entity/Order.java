@@ -22,7 +22,7 @@ public class Order
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
     private LocalDateTime orderDate;
     private BigDecimal totalAmount;
     @Enumerated(value = EnumType.STRING)

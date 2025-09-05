@@ -5,5 +5,7 @@ public enum StatusType
     PLACED,
     SHIPPED,
     DELIVERED,
-    CANCELLED
+    CANCELLED,
+    PENDING,
+    PROCESSING
 }

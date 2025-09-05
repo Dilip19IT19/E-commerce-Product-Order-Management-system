@@ -41,12 +41,16 @@ public class OrderService
                 throw  new IllegalArgumentException("Not have enough stock");
             }
             product.setStockQuantity(product.getStockQuantity()-item.getQuantity());
-            productRepository.save(product); // update product after stock quantity changes
-            return OrderItem.builder()
-                    .product(product)
+
+            OrderItem orderItem= OrderItem.builder()
+                    .product(item.getProduct())
+                    .productName(item.getProduct().getName())
                     .quantity(item.getQuantity())
-                    .price(product.getPrice())
+                    .price(item.getProduct().getPrice())
                     .build();
+            product.getItems().add(orderItem);
+            productRepository.save(product); // update product after stock quantity changes
+            return orderItem;
         }
         ).toList();
         BigDecimal totalAmount=orderItems.stream()
@@ -111,5 +115,19 @@ public class OrderService
         });
         order.setOrderStatus(StatusType.CANCELLED);
         return orderRepository.save(order);
+    }
+
+    @Transactional
+    public void deleteOrder(Long orderId)
+    {
+        Order order= orderRepository.findById(orderId).orElseThrow(()->new EntityNotFoundException("Order not found with id: "+orderId));
+        if(order.getOrderStatus()!=StatusType.CANCELLED)
+        {
+            throw new IllegalArgumentException("Only cancelled order can be deleted");
+        }
+        else
+        {
+            orderRepository.deleteById(orderId);
+        }
     }
 }

@@ -38,7 +38,7 @@ public class CustomerController
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<?> getAllCustomers()
     {
         try

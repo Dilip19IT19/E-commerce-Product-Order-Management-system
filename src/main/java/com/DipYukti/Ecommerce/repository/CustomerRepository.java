@@ -13,6 +13,6 @@ import java.util.Optional;
 public interface CustomerRepository extends JpaRepository<Customer,Long>
 {
     Optional<Customer> findByEmail(String email);
-    @Query(value = " SELECT * FROM customers WHERE name ILIKE '%name%' ",nativeQuery = true)
+    @Query(value = " SELECT * FROM customers WHERE name ILIKE %:name% ",nativeQuery = true)
     List<Customer> findByNameIgnoringCase(@Param(value = "name")String name);
 }

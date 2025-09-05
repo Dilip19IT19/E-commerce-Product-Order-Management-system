@@ -43,7 +43,7 @@ public class CustomerService
     @Transactional
     public Customer updateCustomer(Long customerId, Customer updatedCustomer)
     {
-        Customer oldCustomer=customerRepository.findById(customerId).orElseThrow(()->new EntityNotFoundException("No product found with this id: "+customerId));
+        Customer oldCustomer=customerRepository.findById(customerId).orElseThrow(()->new EntityNotFoundException("No Customer found with this id: "+customerId));
         oldCustomer.setName( updatedCustomer.getName()!=null && !updatedCustomer.getName().isBlank() ? updatedCustomer.getName() : oldCustomer.getName() );
         oldCustomer.setAddress( updatedCustomer.getAddress()!=null && !updatedCustomer.getAddress().isBlank() ? updatedCustomer.getAddress() : oldCustomer.getAddress() );
        return customerRepository.save(oldCustomer);

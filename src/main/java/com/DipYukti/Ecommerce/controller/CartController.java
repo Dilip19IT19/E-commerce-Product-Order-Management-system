@@ -94,7 +94,7 @@ public class CartController
         }
     }
 
-    @DeleteMapping("/{cartItemId}")
+    @DeleteMapping("/cancel/{cartItemId}")
     public ResponseEntity<?> removeItemFromCart(@PathVariable Long cartItemId)
     {
         try

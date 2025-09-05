@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface ProductRepository extends JpaRepository<Product,Long>
 {
-    @Query(value = " SELECT * FROM products WHERE name ILIKE '%name%' ",nativeQuery = true)
+    @Query(value = " SELECT * FROM products WHERE name ILIKE %:name% ",nativeQuery = true)
     List<Product> findByNameIgnoringCase(@Param(value = "name")String name);
     List<Product> findByCategoryId(Long categoryId);
 
