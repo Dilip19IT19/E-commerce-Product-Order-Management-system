@@ -23,7 +23,7 @@ public class ProductController
     private final ProductService productService;
     private final CategoryRepository categoryRepository;
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<?> createProduct(@Valid @RequestBody ProductRequestDto requestDto)
     {
         try
@@ -36,6 +36,7 @@ public class ProductController
             Product product=Product
                     .builder()
                     .name(requestDto.getName())
+                    .description(requestDto.getDescription())
                     .price(requestDto.getPrice())
                     .stockQuantity(requestDto.getStockQuantity())
                     .build();
@@ -47,10 +48,12 @@ public class ProductController
             return ResponseEntity.status(HttpStatus.CREATED).body(
                     ProductResponseDto.builder()
                             .id(savedProduct.getId())
+                            .name(product.getName())
                             .description(savedProduct.getDescription())
                             .price(savedProduct.getPrice())
                             .stockQuantity(savedProduct.getStockQuantity())
                             .categoryName(savedProduct.getCategory().getName())
+                            .build()
             );
         }
         catch (Exception e) {
@@ -59,12 +62,45 @@ public class ProductController
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> fetchAllProducts(@PathVariable Long id)
+    public ResponseEntity<?> fetchProductById(@PathVariable Long id)
+    {
+        try
+        {
+            Product product= productService.getProductById(id);
+            ProductResponseDto responseDto= ProductResponseDto.builder()
+                    .id(product.getId())
+                    .name(product.getName())
+                    .description(product.getDescription())
+                    .price(product.getPrice())
+                    .stockQuantity(product.getStockQuantity())
+                    .categoryName(product.getCategory().getName())
+                    .build();
+            return ResponseEntity.status(HttpStatus.OK).body(responseDto);
+        }
+        catch (Exception e)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+
+    }
+
+    @GetMapping
+    public ResponseEntity<?> fetchAllProducts()
     {
         try
         {
             List<Product>products= productService.getAllProducts();
-            return ResponseEntity.status(HttpStatus.OK).body(products);
+            List<ProductResponseDto>productResponseDtoList=products.stream().map((product -> {
+                return ProductResponseDto.builder()
+                        .id(product.getId())
+                        .description(product.getDescription())
+                        .price(product.getPrice())
+                        .name(product.getName())
+                        .stockQuantity(product.getStockQuantity())
+                        .categoryName(product.getCategory().getName())
+                        .build();
+            })).toList();
+            return ResponseEntity.status(HttpStatus.OK).body(productResponseDtoList);
         }
         catch (Exception e)
         {
@@ -73,35 +109,23 @@ public class ProductController
 
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequestDto requestDto)
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updateProduct(@PathVariable Long id,  @RequestBody ProductRequestDto requestDto)
     {
         try
         {
-            Category category=null;
-            if(requestDto.getCategoryId()!=null)
-            {
-                category=categoryRepository.findById(requestDto.getCategoryId()).orElseThrow(()->new EntityNotFoundException("No category found with id: "+requestDto.getCategoryId()));
-            }
-            Product product=Product
-                    .builder()
-                    .name(requestDto.getName())
-                    .price(requestDto.getPrice())
-                    .stockQuantity(requestDto.getStockQuantity())
+
+            Product updatedProduct= productService.updateProduct(id,requestDto);
+
+            ProductResponseDto responseDto= ProductResponseDto.builder()
+                    .id(updatedProduct.getId())
+                    .description(updatedProduct.getDescription())
+                    .price(updatedProduct.getPrice())
+                    .name(updatedProduct.getName())
+                    .stockQuantity(updatedProduct.getStockQuantity())
+                    .categoryName(updatedProduct.getCategory().getName())
                     .build();
-            if(category!=null)
-            {
-                product.setCategory(category);
-            }
-            Product updatedProduct= productService.updateProduct(id,product);
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    ProductResponseDto.builder()
-                            .id(updatedProduct.getId())
-                            .description(updatedProduct.getDescription())
-                            .price(updatedProduct.getPrice())
-                            .stockQuantity(updatedProduct.getStockQuantity())
-                            .categoryName(updatedProduct.getCategory().getName())
-            );
+            return ResponseEntity.status(HttpStatus.OK).body(responseDto);
         }
         catch (Exception e)
         {
@@ -109,7 +133,7 @@ public class ProductController
         }
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("delete/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id)
     {
         try
@@ -130,14 +154,20 @@ public class ProductController
         {
 
             List<Product>productList = productService.getAllProductsByName(search);
+            if(productList==null || productList.isEmpty())
+            {
+                return   ResponseEntity.status(HttpStatus.OK).body("No result found for : "+search);
+            }
             List<ProductResponseDto> productResponseDtoList=productList.stream().map((product -> {
+
                 return ProductResponseDto
                         .builder()
                         .id(product.getId())
                         .description(product.getDescription())
                         .price(product.getPrice())
+                        .name(product.getName())
                         .stockQuantity(product.getStockQuantity())
-                        .categoryName(product.getCategory()!=null ?  product.getCategory().getName() : null)
+                        .categoryName(product.getCategory().getName())
                         .build();
 
             })).toList();

@@ -21,7 +21,7 @@ public class OrderController
 {
     private final OrderService orderService;
 
-    @PostMapping
+    @PostMapping("/place-order")
     public ResponseEntity<?> placeOrder(@Valid @RequestBody OrderRequestDto requestDto)
     {
         try
@@ -39,6 +39,7 @@ public class OrderController
                     .builder()
                     .orderId(order.getId())
                     .totalAmount(order.getTotalAmount())
+                    .customerId(order.getCustomer().getId())
                     .orderItems(orderItemResponseDtoList)
                     .orderStatus(order.getOrderStatus().name())
                     .build();
@@ -51,7 +52,7 @@ public class OrderController
     }
 
     @GetMapping("customer/{customerId}")
-    public ResponseEntity<?> getOrderOfACustomer(@PathVariable Long customerId)
+    public ResponseEntity<?> getOrdersOfACustomer(@PathVariable Long customerId)
     {
         try
         {
@@ -68,6 +69,7 @@ public class OrderController
                 return OrderResponseDto
                         .builder()
                         .orderId(order.getId())
+                        .customerId(order.getCustomer().getId())
                         .totalAmount(order.getTotalAmount())
                         .orderItems(orderItemResponseDtoList)
                         .orderStatus(order.getOrderStatus().name())
@@ -110,7 +112,7 @@ public class OrderController
         }
     }
 
-    @PutMapping
+    @PutMapping("/update")
     public ResponseEntity<?> updateOrderStatus(@RequestParam Long orderId,@RequestParam String orderStatus )
     {
         try
@@ -136,6 +138,20 @@ public class OrderController
         {
             orderService.cancelOrder(orderId);
             return ResponseEntity.status(HttpStatus.OK).body("Order cancel successfully.");
+        }
+        catch (Exception e)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<?> permanentlyDeleteOrder(@PathVariable Long orderId)
+    {
+        try
+        {
+            orderService.deleteOrder(orderId);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Order deleted successfully");
         }
         catch (Exception e)
         {
