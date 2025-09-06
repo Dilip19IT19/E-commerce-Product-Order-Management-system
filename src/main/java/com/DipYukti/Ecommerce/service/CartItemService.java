@@ -8,6 +8,9 @@ import com.DipYukti.Ecommerce.repository.CustomerRepository;
 import com.DipYukti.Ecommerce.repository.ProductRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +23,9 @@ public class CartItemService
     private final CartItemRepository cartItemRepository;
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
+    private final CacheManager cacheManager;
 
+    @CacheEvict(value = "cartItemsOfCustomer",key="#customerId")
     @Transactional
     public CartItem addIemToCart(Long customerId, Long productId, Integer quantity)
     {
@@ -34,7 +39,7 @@ public class CartItemService
         CartItem cart=cartItemRepository.findByProductAndCustomer(product,customer).orElse(null);
         if(cart!=null)
         {
-            cart.setQuantity(quantity);
+            cart.setQuantity(cart.getQuantity()+quantity);
             return cartItemRepository.save(cart);
         }
         else
@@ -63,15 +68,29 @@ public class CartItemService
             throw new IllegalArgumentException("Not have enough stock of this product");
         }
         cart.setQuantity(quantity);
+        Long customerId=cart.getCustomer().getId();
+
+        var cache = cacheManager.getCache("cartItemsOfCustomer");
+        if (cache != null) {
+            cache.evict(customerId);
+        }
+
         return cartItemRepository.save(cart);
     }
 
     @Transactional
     public void removeItemFromCart(Long cartItemId)
     {
-        if(cartItemRepository.existsById(cartItemId))
+        CartItem cartItem=cartItemRepository.findById(cartItemId).orElse(null);
+        if(cartItem!=null)
         {
             cartItemRepository.deleteById(cartItemId);
+
+            var cache = cacheManager.getCache("cartItemsOfCustomer");
+            if (cache != null) {
+                cache.evict(cartItem.getCustomer().getId());
+            }
+
         }
         else
         {
@@ -79,6 +98,7 @@ public class CartItemService
         }
     }
 
+    @CacheEvict(value = "cartItemsOfCustomer",key = "#customerId")
     @Transactional
     public void clearCart(Long customerId)
     {
@@ -86,6 +106,7 @@ public class CartItemService
        cartItemRepository.deleteByCustomer(customer);
     }
 
+    @Cacheable(value = "cartItemsOfCustomer",key = "#customerId")
     @Transactional(readOnly = true)
     public List<CartItem> getCartItemsOfCustomer(Long customerId)
     {
