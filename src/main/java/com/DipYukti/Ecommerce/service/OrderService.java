@@ -8,13 +8,17 @@ import com.DipYukti.Ecommerce.repository.ProductRepository;
 import com.DipYukti.Ecommerce.type.StatusType;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +28,9 @@ public class OrderService
     private final CustomerRepository customerRepository;
     private final ProductRepository productRepository;
     private final CartItemRepository cartItemRepository;
+    private final CacheManager cacheManager;
 
+    @CacheEvict(value = "ordersByCustomer",key = "#customerId")
     @Transactional
     public Order placeOrder(Long customerId)
     {
@@ -69,12 +75,15 @@ public class OrderService
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "orders",key = "#orderId")
     public Order getOrderById(Long orderId)
     {
         return orderRepository.findById(orderId).orElseThrow(()->new EntityNotFoundException("Order not found with id: "+orderId));
 
     }
 
+    @Transactional(readOnly = true)
+    @Cacheable(value = "ordersByCustomer",key = "#customerId")
     public List<Order> getOrdersByCustomer(Long customerId)
     {
         Customer customer=customerRepository.findById(customerId).orElseThrow(()->new EntityNotFoundException("Customer not found with id: "+customerId));
@@ -82,6 +91,7 @@ public class OrderService
         return orderRepository.findByCustomer(customer);
     }
 
+    @CachePut(value = "orders",key = "#orderId")
     @Transactional
     public Order updateOrderStatus(Long orderId, String status)
     {
@@ -96,9 +106,19 @@ public class OrderService
             throw  new IllegalArgumentException("Not a valid status type "+status);
         }
         order.setOrderStatus(newStatusType);
-        return order;
+        Order updatedOrder= orderRepository.save(order);
+
+        var cache= cacheManager.getCache("ordersByCustomer");
+        if(cache!=null)
+        {
+            cache.evict(order.getCustomer().getId());
+        }
+
+        return updatedOrder;
+
     }
 
+    @CachePut(value = "orders",key = "#orderId")
     @Transactional
     public Order cancelOrder(Long orderId)
     {
@@ -114,9 +134,17 @@ public class OrderService
             productRepository.save(product);
         });
         order.setOrderStatus(StatusType.CANCELLED);
-        return orderRepository.save(order);
+
+        var cache= cacheManager.getCache("ordersByCustomer");
+        if(cache!=null)
+        {
+            cache.evict(order.getCustomer().getId());
+        }
+
+         return orderRepository.save(order);
     }
 
+    @CacheEvict(value = "orders",key = "#orderId")
     @Transactional
     public void deleteOrder(Long orderId)
     {
@@ -128,6 +156,13 @@ public class OrderService
         else
         {
             orderRepository.deleteById(orderId);
+
+            var cache= cacheManager.getCache("ordersByCustomer");
+            if(cache!=null)
+            {
+                cache.evict(order.getCustomer().getId());
+            }
+
         }
     }
 }

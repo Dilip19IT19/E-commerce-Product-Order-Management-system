@@ -33,8 +33,8 @@ public class Customer
     @NotBlank
     @Size(min = 3, max = 15, message = "password must have length between 3 and 15")
     private String password;
-    @OneToMany(mappedBy = "customer",cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "customer",cascade = CascadeType.ALL,orphanRemoval = true)
     private List<CartItem> cartItems;
-    @OneToMany(mappedBy = "customer",cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "customer",cascade = CascadeType.ALL,orphanRemoval = true)
     private List<Order> orders;
 }

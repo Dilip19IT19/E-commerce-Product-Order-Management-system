@@ -19,59 +19,121 @@ public class CategoryController
 {
     private final CategoryService categoryService;
     @PostMapping
-    public ResponseEntity<?> createCategory(@Valid @RequestBody CategoryRequestDto request) {
-        Category category = Category.builder()
-                .name(request.getName())
-                .build();
+    public ResponseEntity<?> createCategory(@Valid @RequestBody CategoryRequestDto request)
+    {
+        try
+        {
+            Category category = Category.builder()
+                    .name(request.getName())
+                    .build();
 
-        Category saved = categoryService.createCategory(category);
+            Category saved = categoryService.createCategory(category);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(saved);
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(saved);
+        }
+        catch (Exception e)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+
     }
 
     @GetMapping
-    public ResponseEntity<List<CategoryResponseDto>> getAllCategories() {
-        List<CategoryResponseDto> categories = categoryService.getAllCategories()
-                .stream()
-                .map(this::toResponse)
-                .toList();
-        return ResponseEntity.ok(categories);
+    public ResponseEntity<?> getAllCategories()
+    {
+        try
+        {
+            List<CategoryResponseDto> categories = categoryService.getAllCategories()
+                    .stream()
+                    .map(this::toResponse)
+                    .toList();
+            return ResponseEntity.ok(categories);
+        }
+        catch (Exception e)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+
+
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CategoryResponseDto> getCategoryById(@PathVariable Long id) {
-        return ResponseEntity.ok(toResponse(categoryService.getCategoryById(id)));
+    public ResponseEntity<?> getCategoryById(@PathVariable Long id)
+    {
+        try
+        {
+            return ResponseEntity.ok(toResponse(categoryService.getCategoryById(id)));
+        }
+        catch (Exception e)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+
     }
 
     @GetMapping("/by-name/{name}")
-    public ResponseEntity<CategoryResponseDto> getCategoryByName(@PathVariable String name) {
-        return ResponseEntity.ok(toResponse(categoryService.getCategoryByName(name.trim())));
+    public ResponseEntity<?> getCategoryByName(@PathVariable String name)
+    {
+        try
+        {
+
+            List<CategoryResponseDto>categoryResponseDtoList=categoryService
+                    .getCategoryByName(name.trim()).stream()
+                    .map((this::toResponse)).toList();
+            return ResponseEntity.status(HttpStatus.OK).body(categoryResponseDtoList);
+        }
+        catch (Exception e)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CategoryResponseDto> updateCategory(
+    public ResponseEntity<?> updateCategory(
             @PathVariable Long id,
-            @Valid @RequestBody CategoryRequestDto request) {
+            @Valid @RequestBody CategoryRequestDto request)
+    {
+        try
+        {
+            Category updated = Category.builder()
+                    .name(request.getName())
+                    .build();
 
-        Category updated = Category.builder()
-                .name(request.getName())
-                .build();
+            return ResponseEntity.ok(toResponse(categoryService.updateCategory(id, updated)));
+        }
+        catch (Exception e)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
 
-        return ResponseEntity.ok(toResponse(categoryService.updateCategory(id, updated)));
+
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
-        categoryService.deleteCategory(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> deleteCategory(@PathVariable Long id)
+    {
+        try
+        {
+            categoryService.deleteCategory(id);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("category deleted successfully");
+        }
+        catch (Exception e)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+
+
     }
-    private CategoryResponseDto toResponse(Category category) {
-        return CategoryResponseDto.builder()
+    private CategoryResponseDto toResponse(Category category)
+    {
+         return CategoryResponseDto.builder()
                 .id(category.getId())
                 .name(category.getName())
                 .build();
+
+
     }
 
 }

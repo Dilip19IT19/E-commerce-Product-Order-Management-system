@@ -5,7 +5,6 @@ import com.DipYukti.Ecommerce.dto.CartItemResponseDto;
 import com.DipYukti.Ecommerce.dto.CartResponseDto;
 import com.DipYukti.Ecommerce.entity.CartItem;
 import com.DipYukti.Ecommerce.service.CartItemService;
-import com.DipYukti.Ecommerce.service.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -45,7 +44,7 @@ public class CartController
         }
     }
 
-    @GetMapping("/{customerId}")
+    @GetMapping("customer/{customerId}")
     public ResponseEntity<?> getCarts(@PathVariable Long customerId)
     {
         try
@@ -72,7 +71,7 @@ public class CartController
                     .customerId(customerId)
                     .totalPrice(totalAmount)
                     .build();
-            return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+            return ResponseEntity.status(HttpStatus.OK).body(responseDto);
 
         }
         catch (Exception e)
@@ -86,7 +85,16 @@ public class CartController
     {
         try
         {
-            return   ResponseEntity.status(HttpStatus.OK).body(cartItemService.updateCartItem(cartItemId,quantity));
+            CartItem cartItem=cartItemService.updateCartItem(cartItemId,quantity);
+            CartItemResponseDto responseDto=CartItemResponseDto
+                    .builder()
+                    .cartItemId(cartItem.getId())
+                    .price(cartItem.getProduct().getPrice())
+                    .productName(cartItem.getProduct().getName())
+                    .quantity(cartItem.getQuantity())
+                    .build();
+
+            return   ResponseEntity.status(HttpStatus.OK).body(responseDto);
         }
         catch (Exception e)
         {
@@ -108,7 +116,7 @@ public class CartController
         }
     }
 
-    @DeleteMapping("/{customerId}")
+    @DeleteMapping("customer/{customerId}")
     public ResponseEntity<?> clearCartsOfCustomer(@PathVariable Long customerId)
     {
         try
