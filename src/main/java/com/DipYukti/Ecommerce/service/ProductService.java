@@ -5,6 +5,10 @@ import com.DipYukti.Ecommerce.entity.Product;
 import com.DipYukti.Ecommerce.repository.ProductRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,17 +20,20 @@ public class ProductService
 {
     private final ProductRepository productRepository;
 
+    @CacheEvict(value = "products",key = " 'allProducts' ")
     public Product createProduct(Product product)
     {
         return productRepository.save(product);
     }
 
+    @Cacheable(value = "products",key = "#productId")
     @Transactional(readOnly = true)
     public Product getProductById(Long productId)
     {
         return productRepository.findById(productId).orElseThrow(()->new EntityNotFoundException("No product found with this id: "+productId));
     }
 
+    @Cacheable(value = "products",key = " 'allProducts' ")
     @Transactional(readOnly = true)
     public List<Product> getAllProducts()
     {
@@ -35,19 +42,23 @@ public class ProductService
 
     //TODO: Implement getAllPaginatedProducts()
 
+    @Cacheable(value = "productsByCategory",key = "#categoryId")
     @Transactional(readOnly = true)
     public List<Product> getProductsByCategoryId(Long categoryId)
     {
         return productRepository.findByCategoryId(categoryId);
     }
 
+    @Cacheable(value = "productsByName",key = "#name")
     @Transactional(readOnly = true)
     public List<Product> getAllProductsByName(String name)
     {
-        return productRepository.findByNameIgnoringCase(name);
+        return productRepository.findByNameIgnoringCase(name.trim());
     }
 
     @Transactional
+    @CachePut(value = "products",key = "#productId")
+    @CacheEvict(value = "products",key = " 'allProducts' ")
     public Product updateProduct(Long productId, ProductRequestDto updatedProduct)
     {
         Product oldProduct=productRepository.findById(productId).orElseThrow(()->new EntityNotFoundException("No product found with this id: "+productId));
@@ -61,6 +72,12 @@ public class ProductService
 
     //TODO: Implement update product category only
 
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "products",key = "#productId"),
+                    @CacheEvict(value = "products",key = " 'allProducts' ")
+            }
+    )
     @Transactional
     public void deleteProductById(Long productId)
     {
