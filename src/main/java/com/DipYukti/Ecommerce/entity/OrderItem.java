@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Entity
@@ -14,7 +15,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @Builder
 @Table(name =" order_items")
-public class OrderItem
+public class OrderItem implements Serializable
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
