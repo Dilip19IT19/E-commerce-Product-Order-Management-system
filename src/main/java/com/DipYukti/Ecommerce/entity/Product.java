@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -18,7 +19,7 @@ import java.util.List;
 @Builder
 @Data
 @Table(name = "products")
-public class Product
+public class Product implements Serializable
 {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
