@@ -19,6 +19,9 @@ spring:
       port: 6379
   cache:
     type: redis
+
+jwt:
+  secretKey: ${JWT_SECRET}
 #  sql:
 #    init:
 #      mode: always

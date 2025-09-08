@@ -1,10 +1,9 @@
 package com.DipYukti.Ecommerce.entity;
 
+import com.DipYukti.Ecommerce.type.RoleType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,10 +31,11 @@ public class Customer implements Serializable
     private String email;
     private String address;
     @NotBlank
-    @Size(min = 3, max = 15, message = "password must have length between 3 and 15")
     private String password;
     @OneToMany(mappedBy = "customer",cascade = CascadeType.ALL,orphanRemoval = true)
     private List<CartItem> cartItems;
     @OneToMany(mappedBy = "customer",cascade = CascadeType.ALL,orphanRemoval = true)
     private List<Order> orders;
+    @Enumerated(EnumType.STRING)
+    private RoleType role;
 }
