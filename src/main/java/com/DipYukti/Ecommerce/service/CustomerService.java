@@ -8,6 +8,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,8 @@ public class CustomerService
         return customerRepository.save(customer);
     }
 
+
+    @PreAuthorize("@customSecurity.hasPermissionAndIsSelfOrAdmin(#customerId,'READ_CUSTOMER')")
     @Cacheable(value = "customers",key = "#customerId")
     @Transactional(readOnly = true)
     public Customer getCustomerById(Long customerId)
@@ -32,6 +35,7 @@ public class CustomerService
         return customerRepository.findById(customerId).orElseThrow(()->new EntityNotFoundException("No Customer found with this id: "+customerId));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Cacheable(value = "customers", key = " 'allCustomers' ")
     @Transactional(readOnly = true)
     public List<Customer> getAllCustomers()
@@ -41,6 +45,7 @@ public class CustomerService
 
     //TODO: Implement getAllPaginatedCustomers()
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional(readOnly = true)
     @Cacheable(value = "customersByName",key = "#name")
     public List<Customer> getAllCustomersByName(String name)
@@ -48,6 +53,7 @@ public class CustomerService
         return customerRepository.findByNameIgnoringCase(name);
     }
 
+    @PreAuthorize("@customSecurity.hasPermissionAndIsSelf(#customerId, 'UPDATE_CUSTOMER')")
     @Transactional
     @CachePut(value = "customers",key = "#customerId")
     @CacheEvict(value = "customers",key = " 'allCustomers' ")
@@ -63,6 +69,7 @@ public class CustomerService
 
     // TODO: Implement updateEmail()
 
+    @PreAuthorize("@customSecurity.hasPermissionAndIsSelfOrAdmin(#customerId,'DELETE_CUSTOMER')")
     @Transactional
     @Caching(
             evict = {

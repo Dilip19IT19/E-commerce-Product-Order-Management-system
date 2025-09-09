@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ public class CartItemService
     private final ProductRepository productRepository;
     private final CacheManager cacheManager;
 
+    @PreAuthorize("@customSecurity.hasPermissionAndIsSelf(#customerId,'CREATE_CART')")
     @CacheEvict(value = "cartItemsOfCustomer",key="#customerId")
     @Transactional
     public CartItem addIemToCart(Long customerId, Long productId, Integer quantity)
@@ -55,6 +57,7 @@ public class CartItemService
     }
 
 
+    @PreAuthorize("@customSecurity.hasPermissionAndIsSelf(#customerId,'UPDATE_CART')")
     @Transactional
     public CartItem updateCartItem(Long cartItemId, int quantity)
     {
@@ -78,6 +81,7 @@ public class CartItemService
         return cartItemRepository.save(cart);
     }
 
+    @PreAuthorize("@customSecurity.hasPermissionAndIsSelf(#customerId,'DELETE_CART')")
     @Transactional
     public void removeItemFromCart(Long cartItemId)
     {
@@ -98,6 +102,7 @@ public class CartItemService
         }
     }
 
+    @PreAuthorize("@customSecurity.hasPermissionAndIsSelf(#customerId,'CLEAR_CART')")
     @CacheEvict(value = "cartItemsOfCustomer",key = "#customerId")
     @Transactional
     public void clearCart(Long customerId)
@@ -106,6 +111,7 @@ public class CartItemService
        cartItemRepository.deleteByCustomer(customer);
     }
 
+    @PreAuthorize("@customSecurity.hasPermissionAndIsSelf(#customerId,'READ_CART')")
     @Cacheable(value = "cartItemsOfCustomer",key = "#customerId")
     @Transactional(readOnly = true)
     public List<CartItem> getCartItemsOfCustomer(Long customerId)

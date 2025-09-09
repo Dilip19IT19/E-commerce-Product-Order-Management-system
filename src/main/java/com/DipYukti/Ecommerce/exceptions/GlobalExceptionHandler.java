@@ -20,6 +20,13 @@ import java.security.SignatureException;
 @RestControllerAdvice
 public class GlobalExceptionHandler
 {
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<?> handleAccessDeniedException(AccessDeniedException ex)
+    {
+        CustomError customError=new CustomError("Access is denied : "+ex.getMessage(), HttpStatus.FORBIDDEN);
+        return ResponseEntity.status(customError.getHttpStatus()).body(customError);
+    }
+
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<?> handleEntityNotFoundException(EntityNotFoundException ex)
     {
@@ -45,13 +52,6 @@ public class GlobalExceptionHandler
     public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex)
     {
         CustomError customError=new CustomError("Invalid arguments are passed: "+ex.getMessage(), HttpStatus.BAD_REQUEST);
-        return ResponseEntity.status(customError.getHttpStatus()).body(customError);
-    }
-
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<?> handleAccessDeniedException(AccessDeniedException ex)
-    {
-        CustomError customError=new CustomError("Access is denied : "+ex.getMessage(), HttpStatus.FORBIDDEN);
         return ResponseEntity.status(customError.getHttpStatus()).body(customError);
     }
 

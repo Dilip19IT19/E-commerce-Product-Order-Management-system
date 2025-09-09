@@ -9,6 +9,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,12 +21,14 @@ public class ProductService
 {
     private final ProductRepository productRepository;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @CacheEvict(value = "products",key = " 'allProducts' ")
     public Product createProduct(Product product)
     {
         return productRepository.save(product);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Cacheable(value = "products",key = "#productId")
     @Transactional(readOnly = true)
     public Product getProductById(Long productId)
@@ -33,6 +36,7 @@ public class ProductService
         return productRepository.findById(productId).orElseThrow(()->new EntityNotFoundException("No product found with this id: "+productId));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Cacheable(value = "products",key = " 'allProducts' ")
     @Transactional(readOnly = true)
     public List<Product> getAllProducts()
@@ -42,6 +46,7 @@ public class ProductService
 
     //TODO: Implement getAllPaginatedProducts()
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Cacheable(value = "productsByCategory",key = "#categoryId")
     @Transactional(readOnly = true)
     public List<Product> getProductsByCategoryId(Long categoryId)
@@ -49,6 +54,7 @@ public class ProductService
         return productRepository.findByCategoryId(categoryId);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Cacheable(value = "productsByName",key = "#name")
     @Transactional(readOnly = true)
     public List<Product> getAllProductsByName(String name)
@@ -56,6 +62,7 @@ public class ProductService
         return productRepository.findByNameIgnoringCase(name.trim());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     @CachePut(value = "products",key = "#productId")
     @CacheEvict(value = "products",key = " 'allProducts' ")
@@ -72,6 +79,7 @@ public class ProductService
 
     //TODO: Implement update product category only
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Caching(
             evict = {
                     @CacheEvict(value = "products",key = "#productId"),
