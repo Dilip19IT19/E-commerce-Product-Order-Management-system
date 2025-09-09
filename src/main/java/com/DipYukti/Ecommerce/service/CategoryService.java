@@ -8,6 +8,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ public class CategoryService
 {
     private final CategoryRepository categoryRepository;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @CacheEvict(value = "categories",key = " 'allCategories' ")
     @Transactional
     public Category createCategory(Category category)
@@ -30,6 +32,7 @@ public class CategoryService
         return categoryRepository.save(category);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @CachePut(value = "categories",key = "#id")
     @CacheEvict(value = "categories",key = "'allCategories'")
     @Transactional
@@ -43,6 +46,7 @@ public class CategoryService
         return categoryRepository.save(existing);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Caching(
             evict = {
                     @CacheEvict(value = "categories",key = "#id"),
@@ -59,6 +63,7 @@ public class CategoryService
         categoryRepository.deleteById(id);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Cacheable(value = "categories",key = "#id")
     @Transactional(readOnly = true)
     public Category getCategoryById(Long id)
@@ -67,6 +72,7 @@ public class CategoryService
                 .orElseThrow(() -> new EntityNotFoundException("Category not found with id: " + id));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Cacheable(value = "categories",key = " 'allCategories' ")
     @Transactional(readOnly = true)
     public List<Category> getAllCategories()

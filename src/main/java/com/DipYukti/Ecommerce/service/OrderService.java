@@ -12,6 +12,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,7 @@ public class OrderService
     private final CartItemRepository cartItemRepository;
     private final CacheManager cacheManager;
 
+    @PreAuthorize("@customSecurity.hasPermissionAndIsSelf(#customerId,'CREATE_ORDER')")
     @CacheEvict(value = "ordersByCustomer",key = "#customerId")
     @Transactional
     public Order placeOrder(Long customerId)
@@ -74,6 +76,7 @@ public class OrderService
         return orderRepository.save(order);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Transactional(readOnly = true)
     @Cacheable(value = "orders",key = "#orderId")
     public Order getOrderById(Long orderId)
@@ -82,6 +85,7 @@ public class OrderService
 
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Transactional(readOnly = true)
     @Cacheable(value = "ordersByCustomer",key = "#customerId")
     public List<Order> getOrdersByCustomer(Long customerId)
@@ -91,6 +95,7 @@ public class OrderService
         return orderRepository.findByCustomer(customer);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @CachePut(value = "orders",key = "#orderId")
     @Transactional
     public Order updateOrderStatus(Long orderId, String status)
@@ -118,6 +123,7 @@ public class OrderService
 
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @CachePut(value = "orders",key = "#orderId")
     @Transactional
     public Order cancelOrder(Long orderId)
@@ -144,6 +150,7 @@ public class OrderService
          return orderRepository.save(order);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @CacheEvict(value = "orders",key = "#orderId")
     @Transactional
     public void deleteOrder(Long orderId)

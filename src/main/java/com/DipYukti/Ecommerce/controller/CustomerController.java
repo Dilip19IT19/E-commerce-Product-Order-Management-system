@@ -89,7 +89,7 @@ public class CustomerController
         }
     }
 
-    @DeleteMapping("/{customerId}")
+    @DeleteMapping("/delete/{customerId}")
     public ResponseEntity<?> deleteCustomer(@PathVariable Long customerId)
     {
         try
