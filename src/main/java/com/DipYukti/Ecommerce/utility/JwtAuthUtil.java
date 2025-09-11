@@ -19,6 +19,8 @@ public class JwtAuthUtil
 {
     @Value("${jwt.secretKey}")
     private String jwtSecretKey;
+    @Value("${jwt.accessExpirationMs}")
+    private Long jwtAccessExpirationMs;
 
     public SecretKey getSecretKey()
     {
@@ -37,7 +39,7 @@ public class JwtAuthUtil
                 .claim("id",customerUserDetails.getCustomer().getId())
                 .claim("role",role.name())
                 .claim("permissions",permissionList.stream().map(p->p.name()).toList())
-                .expiration(new Date(System.currentTimeMillis()+1000*60*10))
+                .expiration(new Date(System.currentTimeMillis()+jwtAccessExpirationMs))
                 .compact();
     }
 
