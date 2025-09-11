@@ -1,6 +1,9 @@
 package com.DipYukti.Ecommerce.service;
 
+import com.DipYukti.Ecommerce.dto.AllPageableProductRequestDto;
+import com.DipYukti.Ecommerce.dto.AllPageableProductsResponseDto;
 import com.DipYukti.Ecommerce.dto.ProductRequestDto;
+import com.DipYukti.Ecommerce.dto.ProductResponseDto;
 import com.DipYukti.Ecommerce.entity.Product;
 import com.DipYukti.Ecommerce.repository.ProductRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -9,6 +12,10 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +52,31 @@ public class ProductService
     }
 
     //TODO: Implement getAllPaginatedProducts()
+
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @Transactional(readOnly = true)
+    public AllPageableProductsResponseDto getAllPaginatedProducts(AllPageableProductRequestDto requestDto)
+    {
+        Sort sort=requestDto.getIsAscending()? Sort.by(requestDto.getSortBy()).ascending() : Sort.by(requestDto.getSortBy()).descending();
+        Pageable pageable= PageRequest.of(requestDto.getPageNumber(),requestDto.getPageSize(),sort);
+        Page<Product> productsPage=productRepository.getAllPaginatedProducts(pageable);
+        return AllPageableProductsResponseDto
+                .builder()
+                .products(productsPage.stream().map(product -> {
+                    return ProductResponseDto
+                            .builder()
+                            .name(product.getName())
+                            .description(product.getDescription())
+                            .id(product.getId())
+                            .categoryName(product.getCategory().getName())
+                            .build();
+                }).toList())
+                .pageNumber(productsPage.getNumber())
+                .pageSize(productsPage.getSize())
+                .totalElements(productsPage.getTotalElements())
+                .totalPages((long) productsPage.getTotalPages())
+                .build();
+    }
 
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Cacheable(value = "productsByCategory",key = "#categoryId")

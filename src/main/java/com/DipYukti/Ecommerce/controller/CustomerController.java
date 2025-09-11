@@ -1,7 +1,9 @@
 package com.DipYukti.Ecommerce.controller;
 
+import com.DipYukti.Ecommerce.dto.AllPageableCustomersInputDto;
 import com.DipYukti.Ecommerce.dto.CustomerRequestDto;
 import com.DipYukti.Ecommerce.dto.CustomerResponseDto;
+import com.DipYukti.Ecommerce.dto.ResetPasswordRequestDto;
 import com.DipYukti.Ecommerce.entity.Customer;
 import com.DipYukti.Ecommerce.service.CustomerService;
 import lombok.RequiredArgsConstructor;
@@ -89,6 +91,19 @@ public class CustomerController
         }
     }
 
+    @PutMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequestDto requestDto)
+    {
+        try
+        {
+            return ResponseEntity.status(HttpStatus.OK).body(customerService.resetPassword(requestDto));
+        }
+        catch(Exception e)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
     @DeleteMapping("/delete/{customerId}")
     public ResponseEntity<?> deleteCustomer(@PathVariable Long customerId)
     {
@@ -103,7 +118,7 @@ public class CustomerController
         }
     }
 
-    @GetMapping
+    @GetMapping("/search")
     public ResponseEntity<?> getAllCustomerByName(@RequestParam String name)
     {
         try
@@ -126,5 +141,30 @@ public class CustomerController
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
 
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getAllPaginatedCustomers(
+           @RequestParam(defaultValue = "5") Integer pageSize,
+           @RequestParam(defaultValue = "0") Integer pageNumber,
+           @RequestParam(defaultValue = "id") String sortBy,
+           @RequestParam(defaultValue = "true") Boolean isAscending
+    )
+    {
+        try
+        {
+            AllPageableCustomersInputDto inputDto= AllPageableCustomersInputDto
+                    .builder()
+                    .sortBy(sortBy)
+                    .isAscending(isAscending)
+                    .pageNumber(pageNumber)
+                    .pageSize(pageSize)
+                    .build();
+            return ResponseEntity.status(HttpStatus.OK).body(customerService.getAllPaginatedCustomers(inputDto));
+        }
+        catch(Exception e)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.DipYukti.Ecommerce.controller;
 
+import com.DipYukti.Ecommerce.dto.AllPageableProductRequestDto;
 import com.DipYukti.Ecommerce.dto.ProductRequestDto;
 import com.DipYukti.Ecommerce.dto.ProductResponseDto;
 import com.DipYukti.Ecommerce.entity.Category;
@@ -84,7 +85,7 @@ public class ProductController
 
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<?> fetchAllProducts()
     {
         try
@@ -107,6 +108,31 @@ public class ProductController
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
 
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getAllPaginatedProducts(
+            @RequestParam(defaultValue = "3") Integer pageSize,
+            @RequestParam(defaultValue = "0") Integer pageNumber,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "true") Boolean isAscending
+    )
+    {
+        try
+        {
+            AllPageableProductRequestDto requestDto= AllPageableProductRequestDto
+                    .builder()
+                    .isAscending(isAscending)
+                    .pageNumber(pageNumber)
+                    .pageSize(pageSize)
+                    .sortBy(sortBy)
+                    .build();
+            return ResponseEntity.status(HttpStatus.OK).body(productService.getAllPaginatedProducts(requestDto));
+        }
+        catch(Exception e)
+        {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     @PutMapping("/update/{id}")

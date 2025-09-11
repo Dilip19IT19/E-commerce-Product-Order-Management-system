@@ -23,7 +23,8 @@ public class RolePermissions
                     PermissionType.UPDATE_CUSTOMER,
                     PermissionType.READ_CUSTOMER,
                     PermissionType.DELETE_CUSTOMER,
-                    PermissionType.CLEAR_CART
+                    PermissionType.CLEAR_CART,
+                    PermissionType.CHANGE_PASSWORD
             ),
             RoleType.ROLE_ADMIN,List.of(
                     PermissionType.CREATE_CATEGORY,
