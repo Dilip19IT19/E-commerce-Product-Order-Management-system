@@ -1,20 +1,15 @@
 package com.DipYukti.Ecommerce.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class LoginResponseDto
+@NoArgsConstructor
+public class RefreshTokenRequestDto
 {
-
-    private String username;
-    private String accessToken;
-    private Long id;
+    @NotBlank
     private String refreshToken;
-
 }

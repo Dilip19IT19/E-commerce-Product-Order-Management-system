@@ -6,6 +6,7 @@ import com.DipYukti.Ecommerce.dto.SignupRequestDto;
 import com.DipYukti.Ecommerce.dto.SignupResponseDto;
 import com.DipYukti.Ecommerce.entity.Customer;
 import com.DipYukti.Ecommerce.entity.CustomerUserDetails;
+import com.DipYukti.Ecommerce.entity.RefreshToken;
 import com.DipYukti.Ecommerce.exceptions.UserAlreadyExistsException;
 import com.DipYukti.Ecommerce.repository.CustomerRepository;
 import com.DipYukti.Ecommerce.type.RoleType;
@@ -27,6 +28,7 @@ public class AuthService
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
     private final JwtAuthUtil authUtil;
+    private final RefreshTokenService refreshTokenService;
 
 
 
@@ -66,10 +68,12 @@ public class AuthService
     {
         Authentication authentication=authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(requestDto.getUsername(),requestDto.getPassword()));
         CustomerUserDetails customerUserDetails=(CustomerUserDetails) authentication.getPrincipal();
-        String token=authUtil.createAccessToken(customerUserDetails);
+        String accessToken=authUtil.createAccessToken(customerUserDetails);
+        RefreshToken refreshToken=refreshTokenService.createRefreshToken(customerUserDetails.getCustomer().getId());
         return LoginResponseDto
                 .builder()
-                .jwt(token)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken.getToken())
                 .id(customerUserDetails.getCustomer().getId())
                 .username(customerUserDetails.getUsername())
                 .build();

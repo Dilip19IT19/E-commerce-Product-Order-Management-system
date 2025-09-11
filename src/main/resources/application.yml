@@ -22,6 +22,8 @@ spring:
 
 jwt:
   secretKey: ${JWT_SECRET}
+  accessExpirationMs: 120000            # 2 MINUTES
+  refreshExpirationMs: 300000          # 5 MINUTES
 #  sql:
 #    init:
 #      mode: always
