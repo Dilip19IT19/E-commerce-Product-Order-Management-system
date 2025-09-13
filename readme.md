@@ -15,6 +15,7 @@ Redis Cloud is used for caching.
 - Integration with Redis Cloud for caching and session storage
 - CRUD operations for products, categories, customers, carts, and orders
 - Global exception handling and validation with meaningful API error messages
+- Implemented pagination for Customer and Product endpoints
 
 ---
 
